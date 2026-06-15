@@ -161,13 +161,19 @@
     var ICONS = {
       folder: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 3.5h4.5l1.5 1.5H14v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/></svg>',
       file: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 2h5l3 3v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M9 2v3h3"/></svg>',
-      image: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="2.5" width="13" height="11" rx="1"/><circle cx="5" cy="6" r="1.3"/><path d="M1.5 12l4-4 3 2.5 2.5-2.5 3.5 4"/></svg>'
+      image: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="2.5" width="13" height="11" rx="1"/><circle cx="5" cy="6" r="1.3"/><path d="M1.5 12l4-4 3 2.5 2.5-2.5 3.5 4"/></svg>',
+      pdf: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 2h5l3 3v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M9 2v3h3"/><path d="M5.5 9h5M5.5 11h5M5.5 7h3"/></svg>',
+      video: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 3.5l4 3-4 3z"/><rect x="7" y="1.5" width="7.5" height="13" rx="1"/></svg>',
+      audio: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1.5 11.5V4.5L6 2v12l-4.5-2.5z"/><rect x="6" y="7" width="8.5" height="2" rx="1"/></svg>'
     };
 
     function getIcon(node) {
       if (node.type === 'dir') return ICONS.folder;
       var ext = (node.name||'').split('.').pop().toLowerCase();
-      if (['png','jpg','jpeg','gif','svg','webp','bmp','pdf','mp4','webm'].includes(ext)) return ICONS.image;
+      if (['png','jpg','jpeg','gif','svg','webp','bmp'].includes(ext)) return ICONS.image;
+      if (ext === 'pdf') return ICONS.pdf;
+      if (['mp4','webm','mov'].includes(ext)) return ICONS.video;
+      if (['mp3','ogg','wav','flac'].includes(ext)) return ICONS.audio;
       return ICONS.file;
     }
 
@@ -211,6 +217,13 @@
               window.location.href = (isAuth ? '/vault/' : '/blog/') + slug;
             };
           })(node.slug);
+        } else if (!isDir && node.path) {
+          item.onclick = (function(p) {
+            return function(e) {
+              if (e.target === toggle || toggle.contains(e.target)) return;
+              window.open('/assets/' + encodeURI(p), '_blank');
+            };
+          })(node.path);
         }
 
         if (isDir && hasChildren) {
