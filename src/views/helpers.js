@@ -7,11 +7,11 @@ function applyLayout(data, isAuthenticated) {
 
   html = html
     .replace('{{{content}}}', data.content || '')
-    .replace('{{title}}', data.title || '')
-    .replace('{{head}}', data.head || '')
-    .replace('{{scripts}}', data.scripts || '')
-    .replace('{{isAuth}}', isAuthenticated ? '1' : '0')
-    .replace('{{currentPath}}', data.currentPath || '');
+    .replaceAll('{{title}}', data.title || '')
+    .replaceAll('{{head}}', data.head || '')
+    .replaceAll('{{scripts}}', data.scripts || '')
+    .replaceAll('{{isAuth}}', isAuthenticated ? '1' : '0')
+    .replaceAll('{{currentPath}}', data.currentPath || '');
 
   html = html.replace(/\{\{#isAuthenticated\}\}([\s\S]*?)\{\{\/isAuthenticated\}\}/g,
     isAuthenticated ? '$1' : '');
@@ -31,9 +31,9 @@ function applyCleanLayout(title, content, isAuthenticated) {
 
   html = html
     .replace('{{{content}}}', content || '')
-    .replace('{{title}}', title || '')
-    .replace('{{head}}', '')
-    .replace('{{scripts}}', '');
+    .replaceAll('{{title}}', title || '')
+    .replaceAll('{{head}}', '')
+    .replaceAll('{{scripts}}', '');
 
   return html;
 }
