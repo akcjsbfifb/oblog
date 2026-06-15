@@ -14,11 +14,23 @@ async function init() {
   db.init();
   console.log('[oblog] Database initialized');
 
-  // Configure SSH key for git if provided and exists
-  if (config.sshKeyPath && require('fs').existsSync(config.sshKeyPath)) {
+  // Configure SSH key from env var (base64) if provided
+  const sshPrivateKey = process.env.SSH_PRIVATE_KEY;
+  if (sshPrivateKey) {
+    const fs = require('fs');
+    const keyPath = config.sshKeyPath;
+    const keyDir = require('path').dirname(keyPath);
+    if (!fs.existsSync(keyDir)) {
+      fs.mkdirSync(keyDir, { recursive: true });
+    }
+    fs.writeFileSync(keyPath, Buffer.from(sshPrivateKey, 'base64').toString('utf-8'));
+    fs.chmodSync(keyPath, 0o600);
+    process.env.GIT_SSH_COMMAND = `ssh -i ${keyPath} -o StrictHostKeyChecking=accept-new`;
+    console.log('[oblog] SSH key configured from SSH_PRIVATE_KEY env var');
+  } else if (config.sshKeyPath && require('fs').existsSync(config.sshKeyPath)) {
     require('fs').chmodSync(config.sshKeyPath, 0o600);
     process.env.GIT_SSH_COMMAND = `ssh -i ${config.sshKeyPath} -o StrictHostKeyChecking=accept-new`;
-    console.log('[oblog] SSH key configured');
+    console.log('[oblog] SSH key configured from mounted file');
   }
 
   // Git sync if configured
