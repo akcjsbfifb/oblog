@@ -1,0 +1,30 @@
+{{#frontmatter}}
+<div class="frontmatter">
+  <h3>Metadata</h3>
+  <table>
+    {{#fields}}
+    <tr><th>{{key}}</th><td>{{value}}</td></tr>
+    {{/fields}}
+  </table>
+</div>
+{{/frontmatter}}
+
+{{#isAuthenticated}}
+<div class="note-meta">
+  {{path}} &middot; Modified {{lastModified}} &middot;
+  {{#isPublic}}<span style="color:#a6e3a1">#public</span>{{/isPublic}}
+  {{^isPublic}}<span style="color:#f38ba8">private</span>{{/isPublic}}
+</div>
+{{/isAuthenticated}}
+
+<div class="note-content">
+  {{{html}}}
+</div>
+
+{{#tags}}
+<div style="margin-top:1.5rem">
+  {{#tagList}}
+  <a href="/tag/{{.}}" class="tag">#{{.}}</a>
+  {{/tagList}}
+</div>
+{{/tags}}

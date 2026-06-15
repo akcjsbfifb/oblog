@@ -1,0 +1,29 @@
+{{#error}}
+<div class="callout callout-danger" style="margin-bottom:1rem">
+  <div class="callout-title">Error</div>
+  {{error}}
+</div>
+{{/error}}
+
+<div style="max-width:400px;margin:3rem auto">
+  <h2>Login</h2>
+  <form method="post" action="/login">
+    {{#redirect}}
+    <input type="hidden" name="redirect" value="{{redirect}}">
+    {{/redirect}}
+    <div style="margin-bottom:1rem">
+      <label for="username" style="display:block;margin-bottom:.25rem;color:#a6adc8">Username</label>
+      <input type="text" id="username" name="username" required
+        style="width:100%;padding:.5rem;background:#11111b;border:1px solid #45475a;border-radius:6px;color:#cdd6f4;font-size:1rem">
+    </div>
+    <div style="margin-bottom:1.5rem">
+      <label for="password" style="display:block;margin-bottom:.25rem;color:#a6adc8">Password</label>
+      <input type="password" id="password" name="password" required
+        style="width:100%;padding:.5rem;background:#11111b;border:1px solid #45475a;border-radius:6px;color:#cdd6f4;font-size:1rem">
+    </div>
+    <button type="submit"
+      style="width:100%;padding:.6rem;background:#89b4fa;color:#1e1e2e;border:none;border-radius:6px;font-size:1rem;font-weight:600;cursor:pointer">
+      Sign in
+    </button>
+  </form>
+</div>

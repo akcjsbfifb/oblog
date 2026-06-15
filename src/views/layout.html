@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{title}} - Oblog</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+  <style>
+    :root {
+      --bg: #1e1e2e;
+      --bg-alt: #181825;
+      --bg-sidebar: #11111b;
+      --fg: #cdd6f4;
+      --fg-muted: #a6adc8;
+      --fg-dim: #6c7086;
+      --border: #313244;
+      --accent: #89b4fa;
+      --green: #a6e3a1;
+      --red: #f38ba8;
+      --yellow: #f9e2af;
+      --purple: #cba6f7;
+      --teal: #89dceb;
+      --radius: 6px;
+      --sidebar-w: 260px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,sans-serif;line-height:1.7;min-height:100vh;display:flex}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    code{font-family:'JetBrains Mono','Fira Code',monospace;font-size:.85em;background:var(--border);padding:.1em .3em;border-radius:4px}
+    pre.hljs code{background:transparent;padding:0}
+
+    /* RESIZABLE SIDEBAR */
+    .sidebar{width:var(--sidebar-w);min-width:180px;max-width:500px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;overflow:hidden;transition:none}
+    .sidebar-handle{position:absolute;top:0;right:0;width:5px;height:100%;cursor:col-resize;z-index:10;background:transparent;transition:background .15s}
+    .sidebar-handle:hover,.sidebar-handle.active{background:var(--accent)}
+    .sidebar-header{padding:.6rem .75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.4rem}
+    .sidebar-header a{color:var(--fg);font-weight:600;font-size:.95rem}
+    .sidebar-toggle{background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:1.1rem;padding:.2rem;border-radius:4px;line-height:1}
+    .sidebar-toggle:hover{color:var(--fg);background:var(--border)}
+    .sidebar-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:.3rem 0}
+    .sidebar-body::-webkit-scrollbar{width:3px}
+    .sidebar-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+    /* TREE */
+    .tree-item{display:flex;align-items:center;padding:.22rem .5rem;font-size:.82rem;color:var(--fg-muted);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;gap:.3rem;border-radius:3px;margin:0 .25rem;user-select:none}
+    .tree-item:hover{background:#ffffff08;color:var(--fg)}
+    .tree-item.active{background:var(--border);color:var(--accent)}
+    .tree-dir-toggle{background:none;border:none;color:var(--fg-dim);cursor:pointer;padding:0;font-size:.6rem;width:14px;text-align:center;flex-shrink:0;line-height:1.6}
+    .tree-dir-toggle:hover{color:var(--fg)}
+    .tree-icon{width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+    .tree-icon svg{width:13px;height:13px}
+    .tree-icon.file svg{color:var(--fg-dim)}
+    .tree-icon.folder svg{color:var(--accent)}
+    .tree-item.public .tree-icon svg{color:var(--green)}
+    .tree-children.collapsed{display:none}
+
+    /* MAIN */
+    .main-wrapper{flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
+    header{display:flex;align-items:center;justify-content:space-between;padding:.45rem 1.5rem;border-bottom:1px solid var(--border);background:var(--bg);gap:1rem;min-height:44px}
+    header .header-left{display:flex;align-items:center;gap:.5rem}
+    header .header-left h1{font-size:1rem;font-weight:600;color:var(--fg);white-space:nowrap}
+    header nav{display:flex;align-items:center;gap:.25rem;white-space:nowrap}
+    header nav a{color:var(--fg-muted);font-size:.82rem;padding:.3rem .55rem;border-radius:var(--radius)}
+    header nav a:hover{color:var(--fg);text-decoration:none;background:var(--border)}
+    header nav form{display:inline}
+    .btn-logout{background:none;border:none;color:var(--fg-muted);cursor:pointer;font-size:.82rem;padding:.3rem .55rem;border-radius:var(--radius)}
+    .btn-logout:hover{color:var(--fg);background:var(--border)}
+    .menu-btn{background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:1.2rem;padding:.15rem .3rem;border-radius:4px;line-height:1}
+    .menu-btn:hover{color:var(--fg);background:var(--border)}
+
+    /* CONTENT */
+    main{flex:1;padding:1.5rem 2rem;max-width:850px;width:100%}
+    @media(max-width:900px){main{padding:1rem}.sidebar{position:fixed;z-index:100}.menu-btn{display:block}}
+
+    /* TYPOGRAPHY */
+    h1,h2,h3,h4,h5,h6{color:var(--fg);margin:1.5rem 0 .75rem}
+    h1{font-size:1.8rem;border-bottom:1px solid var(--border);padding-bottom:.5rem}
+    h2{font-size:1.4rem}h3{font-size:1.15rem}
+    p{margin:.75rem 0}
+    ul,ol{margin:.5rem 0;padding-left:1.5rem}
+    li{margin:.25rem 0}
+    blockquote{border-left:3px solid var(--accent);padding:.5rem 1rem;margin:.75rem 0;background:var(--bg-alt);color:var(--fg-muted)}
+    pre.hljs{background:var(--bg-sidebar);border-radius:8px;padding:1rem;overflow-x:auto;font-size:.85rem;margin:.75rem 0}
+    img{max-width:100%;height:auto;border-radius:var(--radius);margin:.5rem 0}
+    table{border-collapse:collapse;width:100%;margin:.75rem 0;font-size:.9rem}
+    th,td{border:1px solid #45475a;padding:.4rem .6rem;text-align:left}
+    th{background:var(--border)}
+    hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0}
+    .tag{display:inline-block;background:var(--border);color:var(--accent);border-radius:4px;padding:0 .5rem;font-size:.8rem;margin:0 .15rem}
+    .tag:hover{background:#45475a;text-decoration:none}
+    a.wikilink{color:var(--accent)}
+    a.wikilink::before{content:'[['}
+    a.wikilink::after{content:']]'}
+    .note-meta{color:var(--fg-dim);font-size:.85rem;margin-bottom:1rem}
+    .frontmatter{margin-bottom:1.5rem;padding:.75rem 1rem;background:var(--bg-alt);border-radius:8px;border:1px solid var(--border);font-size:.85rem}
+    .frontmatter h3{font-size:.9rem;color:var(--fg-muted);margin:0 0 .5rem}.frontmatter th{font-size:.8rem;padding:.2rem .5rem}.frontmatter td{font-size:.8rem;padding:.2rem .5rem}
+    .callout{border-left:3px solid;border-radius:0 6px 6px 0;padding:.75rem 1rem;margin:.75rem 0;background:var(--bg-alt)}
+    .callout-title{font-weight:700;margin-bottom:.25rem}
+    .callout-note{border-color:var(--accent)}.callout-note .callout-title{color:var(--accent)}
+    .callout-warning{border-color:var(--yellow)}.callout-warning .callout-title{color:var(--yellow)}
+    .callout-danger{border-color:var(--red)}.callout-danger .callout-title{color:var(--red)}
+    .callout-tip{border-color:var(--green)}.callout-tip .callout-title{color:var(--green)}
+    .callout-info{border-color:var(--teal)}.callout-info .callout-title{color:var(--teal)}
+    .callout-example{border-color:var(--purple)}.callout-example .callout-title{color:var(--purple)}
+    .task-list-item{list-style:none;margin-left:-1.5rem}
+    .task-list-item input{margin-right:.5rem}
+    .footnotes{border-top:1px solid var(--border);margin-top:2rem;padding-top:1rem;font-size:.85rem;color:var(--fg-muted)}
+
+    /* LOGIN */
+    .login-form{max-width:400px;margin:3rem auto}
+    .login-form h2{margin-bottom:1rem}
+    .login-form label{display:block;margin-bottom:.25rem;color:var(--fg-muted);font-size:.9rem}
+    .login-form input[type=text],.login-form input[type=password]{width:100%;padding:.5rem .75rem;background:var(--bg-sidebar);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);font-size:1rem;margin-bottom:1rem}
+    .login-form input:focus{outline:none;border-color:var(--accent)}
+    .login-form button{width:100%;padding:.6rem;background:var(--accent);color:var(--bg);border:none;border-radius:var(--radius);font-size:1rem;font-weight:600;cursor:pointer}
+    .login-form button:hover{opacity:.9}
+  </style>
+  {{head}}
+</head>
+<body>
+  <aside class="sidebar" id="sidebar" style="width:var(--sidebar-w);position:relative">
+    <div class="sidebar-handle" id="sidebar-handle"></div>
+    <div class="sidebar-header">
+      <a href="/">Oblog</a>
+    </div>
+    <div class="sidebar-body" id="sidebar-tree">
+      <div class="tree-item" style="color:var(--fg-dim);cursor:default">Loading...</div>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header>
+      <div class="header-left">
+        <button class="menu-btn" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+        <h1>{{title}}</h1>
+      </div>
+      <nav>
+        {{#isAuthenticated}}
+        <a href="/vault">Vault</a>
+        <form action="/logout" method="post"><button class="btn-logout" type="submit">Logout</button></form>
+        {{/isAuthenticated}}
+        {{^isAuthenticated}}
+        <a href="/login">Login</a>
+        {{/isAuthenticated}}
+      </nav>
+    </header>
+    <main>
+      {{{content}}}
+    </main>
+  </div>
+
+  <script>
+  (function() {
+    var isAuth = {{isAuth}};
+    var currentPath = '{{currentPath}}';
+    var treeUrl = isAuth ? '/vault/tree' : '/blog/tree';
+
+    // SVG icons - clean geometric shapes
+    var ICONS = {
+      folder: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 3.5h4.5l1.5 1.5H14v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/></svg>',
+      file: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 2h5l3 3v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M9 2v3h3"/></svg>',
+      image: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="1.5" y="2.5" width="13" height="11" rx="1"/><circle cx="5" cy="6" r="1.3"/><path d="M1.5 12l4-4 3 2.5 2.5-2.5 3.5 4"/></svg>'
+    };
+
+    function getIcon(node) {
+      if (node.type === 'dir') return ICONS.folder;
+      var ext = (node.name||'').split('.').pop().toLowerCase();
+      if (['png','jpg','jpeg','gif','svg','webp','bmp','pdf','mp4','webm'].includes(ext)) return ICONS.image;
+      return ICONS.file;
+    }
+
+    function buildTree(container, nodes, depth, currentPath) {
+      if (!nodes || !nodes.length) return;
+      for (var i = 0; i < nodes.length; i++) {
+        var node = nodes[i];
+        var isDir = node.type === 'dir';
+        var hasChildren = node.children && node.children.length > 0;
+        var isActive = currentPath && (node.slug === currentPath || node.path === currentPath);
+
+        var item = document.createElement('div');
+        item.className = 'tree-item' + (isDir ? ' dir' : '') + (node.isPublic ? ' public' : '') + (isActive ? ' active' : '');
+        item.style.paddingLeft = (depth * 14 + 10) + 'px';
+
+        // Toggle button
+        var toggle = document.createElement('button');
+        toggle.className = 'tree-dir-toggle';
+        toggle.style.visibility = isDir && hasChildren ? 'visible' : 'hidden';
+        toggle.textContent = '▸'; // collapsed by default
+        item.appendChild(toggle);
+
+        // Icon
+        var iconWrap = document.createElement('span');
+        iconWrap.className = 'tree-icon' + (isDir ? ' folder' : ' file');
+        iconWrap.innerHTML = getIcon(node);
+        item.appendChild(iconWrap);
+
+        // Name
+        var name = document.createElement('span');
+        name.textContent = node.name;
+        name.style.overflow = 'hidden';
+        name.style.textOverflow = 'ellipsis';
+        item.appendChild(name);
+
+        if (node.slug) {
+          item.style.cursor = 'pointer';
+          item.onclick = (function(slug) {
+            return function(e) {
+              if (e.target === toggle || toggle.contains(e.target)) return;
+              window.location.href = (isAuth ? '/vault/' : '/blog/') + slug;
+            };
+          })(node.slug);
+        }
+
+        if (isDir && hasChildren) {
+          toggle.onclick = function(e) {
+            e.stopPropagation();
+            var childrenDiv = this.parentElement.nextElementSibling;
+            if (childrenDiv && childrenDiv.classList.contains('tree-children')) {
+              var collapsed = !childrenDiv.classList.contains('collapsed');
+              if (collapsed) { childrenDiv.classList.add('collapsed'); this.textContent = '▸'; }
+              else { childrenDiv.classList.remove('collapsed'); this.textContent = '▾'; }
+            }
+          };
+        }
+
+        container.appendChild(item);
+
+        if (hasChildren) {
+          var childrenDiv = document.createElement('div');
+          childrenDiv.className = 'tree-children collapsed'; // collapsed by default
+          buildTree(childrenDiv, node.children, depth + 1, currentPath);
+          container.appendChild(childrenDiv);
+
+          // Expand if this dir is ancestor of current note
+          if (currentPath && isAncestorOfActive(node, currentPath)) {
+            childrenDiv.classList.remove('collapsed');
+            toggle.textContent = '▾';
+          }
+        }
+      }
+    }
+
+    function isAncestorOfActive(dirNode, slug) {
+      if (!dirNode.children) return false;
+      for (var i = 0; i < dirNode.children.length; i++) {
+        var c = dirNode.children[i];
+        if (c.slug === slug) return true;
+        if (isAncestorOfActive(c, slug)) return true;
+      }
+      return false;
+    }
+
+    function loadTree() {
+      fetch(treeUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var container = document.getElementById('sidebar-tree');
+          container.innerHTML = '';
+          if (data && data.length) {
+            buildTree(container, data, 0, currentPath);
+          } else {
+            container.innerHTML = '<div class="tree-item" style="color:var(--fg-dim);cursor:default">Empty vault</div>';
+          }
+        })
+        .catch(function() {
+          document.getElementById('sidebar-tree').innerHTML = '<div class="tree-item" style="color:var(--red);cursor:default">Failed to load</div>';
+        });
+    }
+
+    loadTree();
+  })();
+
+  // Resizable sidebar
+  (function() {
+    var sidebar = document.getElementById('sidebar');
+    var handle = document.getElementById('sidebar-handle');
+    if (!sidebar || !handle) return;
+    var startX, startW;
+
+    handle.addEventListener('mousedown', function(e) {
+      startX = e.clientX;
+      startW = sidebar.offsetWidth;
+      handle.classList.add('active');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+
+      function onMove(e2) {
+        var w = startW + (e2.clientX - startX);
+        w = Math.max(180, Math.min(500, w));
+        sidebar.style.width = w + 'px';
+        document.documentElement.style.setProperty('--sidebar-w', w + 'px');
+      }
+      function onUp() {
+        handle.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  })();
+
+  // Toggle sidebar (mobile)
+  function toggleSidebar() {
+    var s = document.getElementById('sidebar');
+    s.style.display = s.style.display === 'none' ? '' : 'none';
+  }
+  </script>
+  {{scripts}}
+</body>
+</html>

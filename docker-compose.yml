@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  oblog:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./vault:/app/vault
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - VAULT_PATH=/app/vault
+      - DATA_PATH=/app/data
+      - JWT_SECRET=${JWT_SECRET:-changeme}
+      - JWT_EXPIRES_IN=30d
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-}
+      - GIT_REPO_URL=${GIT_REPO_URL:-}
+      - GIT_BRANCH=${GIT_BRANCH:-main}
+      - CACHE_ENABLED=true
+    restart: unless-stopped

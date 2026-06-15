@@ -1,0 +1,29 @@
+{{#isAuthenticated}}
+<div class="note-meta">
+  Total notes: {{totalCount}} ({{publicCount}} public)
+</div>
+{{/isAuthenticated}}
+
+{{#notes}}
+<article style="margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid #313244">
+  <h2 style="margin:0 0 .25rem">
+    <a href="{{url}}">{{title}}</a>
+  </h2>
+  <div style="color:#6c7086;font-size:.85rem;margin-bottom:.5rem">
+    {{lastModified}}
+    {{#isPublic}}<span style="color:#a6e3a1;margin-left:.5rem">#public</span>{{/isPublic}}
+    {{^isPublic}}<span style="color:#f38ba8;margin-left:.5rem">private</span>{{/isPublic}}
+  </div>
+  {{#tags}}
+  <div>
+    {{#tagList}}
+    <a href="/tag/{{.}}" class="tag">#{{.}}</a>
+    {{/tagList}}
+  </div>
+  {{/tags}}
+</article>
+{{/notes}}
+
+{{^notes}}
+<p style="color:#6c7086;text-align:center;margin:3rem 0">No notes found.</p>
+{{/notes}}
