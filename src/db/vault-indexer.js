@@ -319,13 +319,13 @@ function getVaultTree() {
       const isLast = i === parts.length - 1;
 
       if (!dirMap[currentPath]) {
-        const isFile = isLast && !dirs.includes(fullPath) && !notes.find(n => n.path === fullPath);
+        const allPathsArr = [...allPaths];
+        const hasChildren = allPathsArr.some(p => p !== currentPath && p.startsWith(currentPath + '/'));
 
-        // Check if it's a directory (either has children or is a known dir path)
         const node = {
           name: parts[i],
           path: currentPath,
-          type: isLast && !dirs.includes(currentPath) && dirs.filter(d => d.startsWith(currentPath + '/')).length === 0 ? 'file' : 'dir',
+          type: (isLast && !hasChildren) ? 'file' : 'dir',
           children: [],
         };
 
