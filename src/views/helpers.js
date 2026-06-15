@@ -25,4 +25,17 @@ function applyLayoutSimple(title, content, isAuthenticated, currentPath) {
   return applyLayout({ title, content, currentPath }, isAuthenticated);
 }
 
-module.exports = { applyLayout, applyLayoutSimple };
+function applyCleanLayout(title, content, isAuthenticated) {
+  const layoutPath = path.join(__dirname, 'clean.html');
+  let html = fs.readFileSync(layoutPath, 'utf-8');
+
+  html = html
+    .replace('{{{content}}}', content || '')
+    .replace('{{title}}', title || '')
+    .replace('{{head}}', '')
+    .replace('{{scripts}}', '');
+
+  return html;
+}
+
+module.exports = { applyLayout, applyLayoutSimple, applyCleanLayout };

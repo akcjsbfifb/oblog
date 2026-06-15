@@ -120,7 +120,7 @@
   {{head}}
 </head>
 <body>
-  <aside class="sidebar" id="sidebar" style="width:var(--sidebar-w);position:relative">
+  <aside class="sidebar" id="sidebar" style="width:var(--sidebar-w)">
     <div class="sidebar-handle" id="sidebar-handle"></div>
     <div class="sidebar-header">
       <a href="/">Oblog</a>
@@ -221,6 +221,16 @@
               var collapsed = !childrenDiv.classList.contains('collapsed');
               if (collapsed) { childrenDiv.classList.add('collapsed'); this.textContent = '▸'; }
               else { childrenDiv.classList.remove('collapsed'); this.textContent = '▾'; }
+            }
+          };
+
+          item.onclick = function(e) {
+            if (e.target === toggle || toggle.contains(e.target)) return;
+            var childrenDiv = this.nextElementSibling;
+            if (childrenDiv && childrenDiv.classList.contains('tree-children')) {
+              var collapsed = !childrenDiv.classList.contains('collapsed');
+              if (collapsed) { childrenDiv.classList.add('collapsed'); toggle.textContent = '▸'; }
+              else { childrenDiv.classList.remove('collapsed'); toggle.textContent = '▾'; }
             }
           };
         }

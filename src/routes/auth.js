@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 const { optionalAuth } = require('../middleware/auth');
-const { applyLayout, applyLayoutSimple } = require('../views/helpers');
+const { applyLayout, applyLayoutSimple, applyCleanLayout } = require('../views/helpers');
 
 const router = Router();
 
@@ -37,7 +37,7 @@ router.get('/login', optionalAuth, (req, res) => {
   if (req.user) {
     return res.redirect(req.query.redirect || '/vault');
   }
-  const html = applyLayoutSimple('Login', renderLogin(null, req.query.redirect), false, '');
+  const html = applyCleanLayout('Login', renderLogin(null, req.query.redirect), false);
   res.send(html);
 });
 
@@ -58,7 +58,7 @@ router.post('/login', (req, res) => {
   }
 
   if (!valid) {
-    const html = applyLayoutSimple('Login', renderLogin('Invalid username or password', redirect), false, '');
+    const html = applyCleanLayout('Login', renderLogin('Invalid username or password', redirect), false);
     return res.status(401).send(html);
   }
 
