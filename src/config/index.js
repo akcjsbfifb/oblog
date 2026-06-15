@@ -15,4 +15,5 @@ module.exports = {
   cacheEnabled: env('CACHE_ENABLED', 'true') === 'true',
   gitRepoUrl: env('GIT_REPO_URL', ''),
   gitBranch: env('GIT_BRANCH', 'main'),
+  sshKeyPath: env('SSH_KEY_PATH', '/app/data/ssh/key'),
 };

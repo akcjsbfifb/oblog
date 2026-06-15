@@ -10,7 +10,6 @@ services:
     volumes:
       - vault_data:/app/vault
       - oblog_data:/app/data
-      - ${SSH_KEY_PATH:-~/.ssh/id_ed25519}:/app/data/ssh/id_ed25519:ro
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -23,6 +22,7 @@ services:
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
       - GIT_REPO_URL=${GIT_REPO_URL}
       - GIT_BRANCH=${GIT_BRANCH:-main}
+      - SSH_KEY_PATH=${SSH_KEY_PATH:-/app/data/ssh/key}
       - CACHE_ENABLED=true
     restart: unless-stopped
     healthcheck:

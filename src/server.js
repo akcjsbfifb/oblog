@@ -14,6 +14,13 @@ async function init() {
   db.init();
   console.log('[oblog] Database initialized');
 
+  // Configure SSH key for git if provided and exists
+  if (config.sshKeyPath && require('fs').existsSync(config.sshKeyPath)) {
+    require('fs').chmodSync(config.sshKeyPath, 0o600);
+    process.env.GIT_SSH_COMMAND = `ssh -i ${config.sshKeyPath} -o StrictHostKeyChecking=accept-new`;
+    console.log('[oblog] SSH key configured');
+  }
+
   // Git sync if configured
   if (config.gitRepoUrl) {
     console.log('[oblog] Git repo configured, syncing...');

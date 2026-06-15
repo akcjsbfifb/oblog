@@ -13,7 +13,7 @@ RUN apk add --no-cache --virtual .build-deps python3 make g++ && \
 
 COPY src ./src
 
-RUN mkdir -p /app/data /app/vault
+RUN mkdir -p /app/data /app/vault /app/data/ssh
 
 VOLUME ["/app/vault", "/app/data"]
 
