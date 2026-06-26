@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
   <title>{{title}} - Oblog</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
@@ -24,7 +24,7 @@
       --radius: 6px;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,sans-serif;line-height:1.7;min-height:100vh}
+    body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,sans-serif;line-height:1.7;min-height:100vh;min-height:100dvh}
     a{color:var(--accent);text-decoration:none}
     a:hover{text-decoration:underline}
     code{font-family:'JetBrains Mono','Fira Code',monospace;font-size:.85em;background:var(--border);padding:.1em .3em;border-radius:4px}
@@ -58,7 +58,7 @@
   </style>
   {{head}}
 </head>
-<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem">
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;padding:2rem">
   <div style="width:100%;max-width:420px">
     {{{content}}}
   </div>
