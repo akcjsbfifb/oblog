@@ -42,6 +42,25 @@ async function init() {
   // Index vault
   await reindexVault();
 
+  // Periodic git sync + reindex
+  const cronInterval = parseInt(process.env.CRON_SYNC_MINUTES || '5', 10);
+  if (cronInterval > 0 && config.gitRepoUrl) {
+    const cron = require('node-cron');
+    const cache = require('./markdown/cache');
+    cron.schedule(`*/${cronInterval} * * * *`, async () => {
+      try {
+        console.log('[cron] Syncing...');
+        await syncRepo();
+        await reindexVault();
+        cache.invalidateAll();
+        console.log('[cron] Sync complete');
+      } catch (err) {
+        console.error('[cron] Sync error:', err.message);
+      }
+    });
+    console.log(`[oblog] Cron sync enabled: every ${cronInterval} min`);
+  }
+
   // Start server
   const app = require('./app');
   app.listen(config.port, () => {
