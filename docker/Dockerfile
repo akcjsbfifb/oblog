@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 RUN apk add --no-cache git openssh-client
 
@@ -6,7 +6,7 @@ WORKDIR /app
 
 RUN npm install -g pnpm
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN apk add --no-cache --virtual .build-deps python3 make g++ && \
     pnpm install --prod --frozen-lockfile && \
     apk del .build-deps
