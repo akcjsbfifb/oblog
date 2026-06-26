@@ -43,27 +43,23 @@ router.get('/login', optionalAuth, (req, res) => {
 
 // POST /login
 router.post('/login', (req, res) => {
-  const { username, password, redirect } = req.body;
+  const { password, redirect } = req.body;
 
-  let valid = false;
-
-  if (username === config.adminUsername) {
-    if (!config.adminPasswordHash) {
-      // First run: auto-set password hash with bcrypt of 'admin'
-      config.adminPasswordHash = bcrypt.hashSync('admin', 10);
-      console.log('[auth] Default password hash generated. Use: ADMIN_PASSWORD_HASH=' + config.adminPasswordHash);
-      console.log('[auth] Default password is "admin". Change it immediately.');
-    }
-    valid = bcrypt.compareSync(password, config.adminPasswordHash);
+  if (!config.adminPasswordHash) {
+    config.adminPasswordHash = bcrypt.hashSync('admin', 10);
+    console.log('[auth] Default password hash generated. Use: ADMIN_PASSWORD_HASH=' + config.adminPasswordHash);
+    console.log('[auth] Default password is "admin". Change it immediately.');
   }
 
+  const valid = bcrypt.compareSync(password, config.adminPasswordHash);
+
   if (!valid) {
-    const html = applyCleanLayout('Login', renderLogin('Invalid username or password', redirect), false);
+    const html = applyCleanLayout('Login', renderLogin('Invalid password', redirect), false);
     return res.status(401).send(html);
   }
 
   const token = jwt.sign(
-    { username, role: 'admin' },
+    { role: 'admin' },
     config.jwtSecret,
     { expiresIn: config.jwtExpiresIn }
   );

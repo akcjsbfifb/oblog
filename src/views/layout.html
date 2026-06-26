@@ -31,12 +31,17 @@
     code{font-family:'JetBrains Mono','Fira Code',monospace;font-size:.85em;background:var(--border);padding:.1em .3em;border-radius:4px}
     pre.hljs code{background:transparent;padding:0}
 
-    /* RESIZABLE SIDEBAR */
+    /* SIDEBAR */
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99}
+    .sidebar-overlay.visible{display:block}
     .sidebar{width:var(--sidebar-w);min-width:180px;max-width:500px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:sticky;top:0;overflow:hidden;transition:none}
     .sidebar-handle{position:absolute;top:0;right:0;width:5px;height:100%;cursor:col-resize;z-index:10;background:transparent;transition:background .15s}
     .sidebar-handle:hover,.sidebar-handle.active{background:var(--accent)}
-    .sidebar-header{padding:.6rem .75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.4rem}
+    .sidebar-header{padding:.6rem .75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
     .sidebar-header a{color:var(--fg);font-weight:600;font-size:.95rem}
+    .sidebar-header .sidebar-spacer{flex:1}
+    .sidebar-sort{background:var(--bg-alt);color:var(--fg-muted);border:1px solid var(--border);border-radius:4px;font-size:.7rem;padding:.15rem .3rem;cursor:pointer;outline:none}
+    .sidebar-sort:focus{border-color:var(--accent)}
     .sidebar-toggle{background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:1.1rem;padding:.2rem;border-radius:4px;line-height:1}
     .sidebar-toggle:hover{color:var(--fg);background:var(--border)}
     .sidebar-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:.3rem 0}
@@ -59,20 +64,29 @@
     /* MAIN */
     .main-wrapper{flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
     header{display:flex;align-items:center;justify-content:space-between;padding:.45rem 1.5rem;border-bottom:1px solid var(--border);background:var(--bg);gap:1rem;min-height:44px}
-    header .header-left{display:flex;align-items:center;gap:.5rem}
-    header .header-left h1{font-size:1rem;font-weight:600;color:var(--fg);white-space:nowrap}
-    header nav{display:flex;align-items:center;gap:.25rem;white-space:nowrap}
+    header .header-left{display:flex;align-items:center;gap:.5rem;min-width:0}
+    header .header-left h1{font-size:1rem;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    header nav{display:flex;align-items:center;gap:.25rem;white-space:nowrap;flex-shrink:0}
     header nav a{color:var(--fg-muted);font-size:.82rem;padding:.3rem .55rem;border-radius:var(--radius)}
     header nav a:hover{color:var(--fg);text-decoration:none;background:var(--border)}
     header nav form{display:inline}
     .btn-logout{background:none;border:none;color:var(--fg-muted);cursor:pointer;font-size:.82rem;padding:.3rem .55rem;border-radius:var(--radius)}
     .btn-logout:hover{color:var(--fg);background:var(--border)}
-    .menu-btn{background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:1.2rem;padding:.15rem .3rem;border-radius:4px;line-height:1}
+    .menu-btn{display:none;background:none;border:none;color:var(--fg-dim);cursor:pointer;font-size:1.2rem;padding:.15rem .3rem;border-radius:4px;line-height:1}
     .menu-btn:hover{color:var(--fg);background:var(--border)}
 
     /* CONTENT */
     main{flex:1;padding:1.5rem 2rem;max-width:850px;width:100%}
-    @media(max-width:900px){main{padding:1rem}.sidebar{position:fixed;z-index:100}.menu-btn{display:block}}
+
+    /* MOBILE */
+    @media(max-width:900px){
+      .menu-btn{display:block}
+      .sidebar-handle{display:none}
+      .sidebar{position:fixed;left:0;top:0;z-index:100;transform:translateX(-100%);transition:transform .25s ease;width:85vw;max-width:320px;min-width:0}
+      .sidebar.open{transform:translateX(0)}
+      main{padding:1rem}
+      header{padding:.45rem 1rem}
+    }
 
     /* TYPOGRAPHY */
     h1,h2,h3,h4,h5,h6{color:var(--fg);margin:1.5rem 0 .75rem}
@@ -120,10 +134,18 @@
   {{head}}
 </head>
 <body>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
   <aside class="sidebar" id="sidebar" style="width:var(--sidebar-w)">
     <div class="sidebar-handle" id="sidebar-handle"></div>
     <div class="sidebar-header">
       <a href="/">Oblog</a>
+      <span class="sidebar-spacer"></span>
+      <select class="sidebar-sort" id="sidebar-sort" title="Sort order">
+        <option value="name-asc">A-Z</option>
+        <option value="name-desc">Z-A</option>
+        <option value="folders-first">Folders first</option>
+        <option value="files-first">Files first</option>
+      </select>
     </div>
     <div class="sidebar-body" id="sidebar-tree">
       <div class="tree-item" style="color:var(--fg-dim);cursor:default">Loading...</div>
@@ -133,7 +155,7 @@
   <div class="main-wrapper">
     <header>
       <div class="header-left">
-        <button class="menu-btn" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+        <button class="menu-btn" id="menu-btn" title="Menu">&#9776;</button>
         <h1>{{title}}</h1>
       </div>
       <nav>
@@ -155,9 +177,20 @@
   (function() {
     var isAuth = {{isAuth}};
     var currentPath = '{{currentPath}}';
-    var treeUrl = isAuth ? '/vault/tree' : '/blog/tree';
+    var sortSelect = document.getElementById('sidebar-sort');
+    var savedSort = localStorage.getItem('oblog-sort') || 'name-asc';
+    sortSelect.value = savedSort;
 
-    // SVG icons - clean geometric shapes
+    function treeUrl(sort) {
+      var base = isAuth ? '/vault/tree' : '/blog/tree';
+      return base + '?sort=' + encodeURIComponent(sort);
+    }
+
+    sortSelect.addEventListener('change', function() {
+      localStorage.setItem('oblog-sort', this.value);
+      loadTree();
+    });
+
     var ICONS = {
       folder: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M2 3.5h4.5l1.5 1.5H14v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"/></svg>',
       file: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 2h5l3 3v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M9 2v3h3"/></svg>',
@@ -177,6 +210,24 @@
       return ICONS.file;
     }
 
+    function isMobile() {
+      return window.innerWidth <= 900;
+    }
+
+    function closeSidebar() {
+      var s = document.getElementById('sidebar');
+      var o = document.getElementById('sidebar-overlay');
+      s.classList.remove('open');
+      o.classList.remove('visible');
+    }
+
+    function openSidebar() {
+      var s = document.getElementById('sidebar');
+      var o = document.getElementById('sidebar-overlay');
+      s.classList.add('open');
+      o.classList.add('visible');
+    }
+
     function buildTree(container, nodes, depth, currentPath) {
       if (!nodes || !nodes.length) return;
       for (var i = 0; i < nodes.length; i++) {
@@ -189,20 +240,17 @@
         item.className = 'tree-item' + (isDir ? ' dir' : '') + (node.isPublic ? ' public' : '') + (isActive ? ' active' : '');
         item.style.paddingLeft = (depth * 14 + 10) + 'px';
 
-        // Toggle button
         var toggle = document.createElement('button');
         toggle.className = 'tree-dir-toggle';
         toggle.style.visibility = isDir && hasChildren ? 'visible' : 'hidden';
-        toggle.textContent = '▸'; // collapsed by default
+        toggle.textContent = '\u25B8';
         item.appendChild(toggle);
 
-        // Icon
         var iconWrap = document.createElement('span');
         iconWrap.className = 'tree-icon' + (isDir ? ' folder' : ' file');
         iconWrap.innerHTML = getIcon(node);
         item.appendChild(iconWrap);
 
-        // Name
         var name = document.createElement('span');
         name.textContent = node.name;
         name.style.overflow = 'hidden';
@@ -214,6 +262,7 @@
           item.onclick = (function(slug) {
             return function(e) {
               if (e.target === toggle || toggle.contains(e.target)) return;
+              if (isMobile()) closeSidebar();
               window.location.href = (isAuth ? '/vault/' : '/blog/') + slug;
             };
           })(node.slug);
@@ -221,6 +270,7 @@
           item.onclick = (function(p) {
             return function(e) {
               if (e.target === toggle || toggle.contains(e.target)) return;
+              if (isMobile()) closeSidebar();
               window.open('/assets/' + encodeURI(p), '_blank');
             };
           })(node.path);
@@ -232,8 +282,8 @@
             var childrenDiv = this.parentElement.nextElementSibling;
             if (childrenDiv && childrenDiv.classList.contains('tree-children')) {
               var collapsed = !childrenDiv.classList.contains('collapsed');
-              if (collapsed) { childrenDiv.classList.add('collapsed'); this.textContent = '▸'; }
-              else { childrenDiv.classList.remove('collapsed'); this.textContent = '▾'; }
+              if (collapsed) { childrenDiv.classList.add('collapsed'); this.textContent = '\u25B8'; }
+              else { childrenDiv.classList.remove('collapsed'); this.textContent = '\u25BE'; }
             }
           };
 
@@ -242,8 +292,8 @@
             var childrenDiv = this.nextElementSibling;
             if (childrenDiv && childrenDiv.classList.contains('tree-children')) {
               var collapsed = !childrenDiv.classList.contains('collapsed');
-              if (collapsed) { childrenDiv.classList.add('collapsed'); toggle.textContent = '▸'; }
-              else { childrenDiv.classList.remove('collapsed'); toggle.textContent = '▾'; }
+              if (collapsed) { childrenDiv.classList.add('collapsed'); toggle.textContent = '\u25B8'; }
+              else { childrenDiv.classList.remove('collapsed'); toggle.textContent = '\u25BE'; }
             }
           };
         }
@@ -252,14 +302,13 @@
 
         if (hasChildren) {
           var childrenDiv = document.createElement('div');
-          childrenDiv.className = 'tree-children collapsed'; // collapsed by default
+          childrenDiv.className = 'tree-children collapsed';
           buildTree(childrenDiv, node.children, depth + 1, currentPath);
           container.appendChild(childrenDiv);
 
-          // Expand if this dir is ancestor of current note
           if (currentPath && isAncestorOfActive(node, currentPath)) {
             childrenDiv.classList.remove('collapsed');
-            toggle.textContent = '▾';
+            toggle.textContent = '\u25BE';
           }
         }
       }
@@ -276,7 +325,7 @@
     }
 
     function loadTree() {
-      fetch(treeUrl)
+      fetch(treeUrl(sortSelect.value))
         .then(function(r) { return r.json(); })
         .then(function(data) {
           var container = document.getElementById('sidebar-tree');
@@ -293,9 +342,21 @@
     }
 
     loadTree();
+
+    document.getElementById('menu-btn').addEventListener('click', function() {
+      var s = document.getElementById('sidebar');
+      if (s.classList.contains('open')) closeSidebar();
+      else openSidebar();
+    });
+
+    document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+
+    window.addEventListener('resize', function() {
+      if (!isMobile()) closeSidebar();
+    });
   })();
 
-  // Resizable sidebar
+  // Resizable sidebar (desktop only)
   (function() {
     var sidebar = document.getElementById('sidebar');
     var handle = document.getElementById('sidebar-handle');
@@ -303,6 +364,7 @@
     var startX, startW;
 
     handle.addEventListener('mousedown', function(e) {
+      if (window.innerWidth <= 900) return;
       startX = e.clientX;
       startW = sidebar.offsetWidth;
       handle.classList.add('active');
@@ -326,12 +388,6 @@
       document.addEventListener('mouseup', onUp);
     });
   })();
-
-  // Toggle sidebar (mobile)
-  function toggleSidebar() {
-    var s = document.getElementById('sidebar');
-    s.style.display = s.style.display === 'none' ? '' : 'none';
-  }
   </script>
   {{scripts}}
 </body>

@@ -248,8 +248,8 @@ async function reindexVault() {
   const dbNotes = db.prepare('SELECT path FROM notes').all();
   for (const note of dbNotes) {
     if (!fs.existsSync(path.join(vaultPath, note.path))) {
-      db.prepare('DELETE FROM notes WHERE path = ?').run(note.path);
       db.prepare('DELETE FROM links WHERE source_path = ?').run(note.path);
+      db.prepare('DELETE FROM notes WHERE path = ?').run(note.path);
     }
   }
 
@@ -292,21 +292,18 @@ function resolveWikilink(targetName) {
   return resolveNotePath(db, targetName);
 }
 
-function getVaultTree() {
+function getVaultTree(sortMode) {
   const db = getDb();
   const notes = db.prepare('SELECT path, title, slug, is_public FROM notes ORDER BY path').all();
   const dirs = db.prepare('SELECT DISTINCT path FROM assets ORDER BY path').all().map(r => r.path);
 
-  // All files/folders in vault
   const allPaths = new Set();
   notes.forEach(n => allPaths.add(n.path));
   dirs.forEach(d => allPaths.add(d));
 
-  // Build tree structure
   const root = { name: '/', type: 'dir', children: [] };
   const dirMap = { '': root };
 
-  // Sort all paths and build tree
   const sortedPaths = [...allPaths].sort();
 
   for (const fullPath of sortedPaths) {
@@ -329,7 +326,6 @@ function getVaultTree() {
           children: [],
         };
 
-        // If it's a markdown file, add metadata
         if (currentPath.endsWith('.md')) {
           const note = notes.find(n => n.path === currentPath);
           if (note) {
@@ -347,7 +343,32 @@ function getVaultTree() {
     }
   }
 
+  sortTree(root.children, sortMode);
+
   return root.children;
+}
+
+function sortTree(nodes, mode) {
+  if (!nodes || !nodes.length) return;
+  const m = mode || 'name-asc';
+  const cmp = {
+    'name-asc': (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+    'name-desc': (a, b) => b.name.localeCompare(a.name, undefined, { sensitivity: 'base' }),
+    'folders-first': (a, b) => {
+      if (a.type === 'dir' && b.type !== 'dir') return -1;
+      if (a.type !== 'dir' && b.type === 'dir') return 1;
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    },
+    'files-first': (a, b) => {
+      if (a.type !== 'dir' && b.type === 'dir') return -1;
+      if (a.type === 'dir' && b.type !== 'dir') return 1;
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    },
+  };
+  nodes.sort(cmp[m] || cmp['name-asc']);
+  for (const n of nodes) {
+    if (n.children) sortTree(n.children, mode);
+  }
 }
 
 module.exports = {

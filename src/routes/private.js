@@ -43,7 +43,7 @@ router.get('/', (req, res) => {
 
 // GET /vault/tree - File tree as JSON
 router.get('/tree', (req, res) => {
-  const tree = getVaultTree();
+  const tree = getVaultTree(req.query.sort);
   res.json(tree);
 });
 

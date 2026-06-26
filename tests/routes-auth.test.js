@@ -30,7 +30,6 @@ afterEach(() => {
 test('GET /login shows form when not authenticated', async () => {
   const res = await request(app).get('/login');
   expect(res.status).toBe(200);
-  expect(res.text).toContain('username');
   expect(res.text).toContain('password');
   expect(res.text).toContain('Sign in');
 });
@@ -76,7 +75,7 @@ test('POST /login with invalid password returns 401', async () => {
     .send('username=admin&password=wrong');
 
   expect(res.status).toBe(401);
-  expect(res.text).toContain('Invalid username or password');
+  expect(res.text).toContain('Invalid password');
 });
 
 test('POST /login with invalid username returns 401', async () => {

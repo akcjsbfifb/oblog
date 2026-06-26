@@ -27,7 +27,7 @@ function noteSummaryHtml(note, prefix) {
 // GET /blog/tree - Public file tree (only public notes)
 router.get('/tree', (req, res) => {
   const { getVaultTree } = require('../db/vault-indexer');
-  const tree = getVaultTree();
+  const tree = getVaultTree(req.query.sort);
   function filterPublic(nodes) {
     if (!nodes) return [];
     return nodes.filter(node => {

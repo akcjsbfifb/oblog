@@ -119,6 +119,5 @@ test('GET /login returns login page', async () => {
   const res = await request(app).get('/login');
   expect(res.status).toBe(200);
   expect(res.text).toContain('Login');
-  expect(res.text).toContain('username');
   expect(res.text).toContain('password');
 });
