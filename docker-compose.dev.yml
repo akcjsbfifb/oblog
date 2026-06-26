@@ -9,7 +9,7 @@ services:
       - '3000:3000'
     volumes:
       - ./src:/app/src
-      - ./vault:/app/vault
+      - ${HOST_VAULT_PATH:-./vault}:/app/vault
       - ./data:/app/data
     environment:
       - NODE_ENV=development
