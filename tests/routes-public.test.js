@@ -121,3 +121,13 @@ test('GET /login returns login page', async () => {
   expect(res.text).toContain('Login');
   expect(res.text).toContain('password');
 });
+
+test('GET /blog/:slug returns 404 when DB has note but file is gone', async () => {
+  await ensureIndexed();
+  const fs = require('fs');
+  const path = require('path');
+  fs.unlinkSync(path.join(vaultDir, 'public-note.md'));
+
+  const res = await request(app).get('/blog/public-note');
+  expect(res.status).toBe(404);
+});

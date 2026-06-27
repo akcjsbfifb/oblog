@@ -23,7 +23,7 @@ services:
       - ./data:/app/data
     develop:
       watch:
-        - action: sync
+        - action: sync+restart
           path: ./src
           target: /app/src
           ignore:

@@ -114,3 +114,16 @@ test('GET /vault/tree returns full file tree as JSON', async () => {
   // tree has at least the subfolder dir
   expect(tree.length).toBeGreaterThan(0);
 });
+
+test('GET /vault/:slug returns 404 when DB has note but file is gone', async () => {
+  await ensureIndexed();
+  const fs = require('fs');
+  const path = require('path');
+  fs.unlinkSync(path.join(vaultDir, 'private-note.md'));
+
+  const res = await request(app)
+    .get('/vault/private-note')
+    .set('Cookie', `token=${makeToken()}`);
+
+  expect(res.status).toBe(404);
+});

@@ -65,3 +65,18 @@ test('notFoundHandler returns JSON for API requests', () => {
   expect(res.status).toHaveBeenCalledWith(404);
   expect(res.json).toHaveBeenCalledWith({ error: 'Not found' });
 });
+
+test('notFoundHandler falls back to default host', () => {
+  jest.resetModules();
+  const { notFoundHandler } = require('../src/middleware/error');
+
+  const req = { get: () => undefined, accepts: () => true };
+  const res = {
+    status: jest.fn().mockReturnThis(),
+    send: jest.fn(),
+  };
+  notFoundHandler(req, res);
+
+  expect(res.status).toHaveBeenCalledWith(404);
+  expect(res.send).toHaveBeenCalledWith(expect.stringContaining('Page not found'));
+});

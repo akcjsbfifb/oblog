@@ -23,6 +23,7 @@
       --teal: #89dceb;
       --radius: 6px;
       --sidebar-w: 260px;
+      --topbar-h: 2.8rem;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,sans-serif;line-height:1.7;min-height:100vh;min-height:100dvh;display:flex}
@@ -37,7 +38,7 @@
     .sidebar{width:var(--sidebar-w);min-width:180px;max-width:500px;background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;height:100dvh;position:fixed;top:0;left:0;z-index:50;overflow:hidden;transition:none}
     .sidebar-handle{position:absolute;top:0;right:0;width:5px;height:100%;cursor:col-resize;z-index:10;background:transparent;transition:background .15s}
     .sidebar-handle:hover,.sidebar-handle.active{background:var(--accent)}
-    .sidebar-header{padding:.6rem .75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+    .sidebar-header{height:var(--topbar-h);padding:0 .75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
     .sidebar-header a{color:var(--fg);font-weight:600;font-size:.95rem}
     .sidebar-header .sidebar-spacer{flex:1}
     .sidebar-sort{background:var(--bg-alt);color:var(--fg-muted);border:1px solid var(--border);border-radius:4px;font-size:.7rem;padding:.15rem .3rem;cursor:pointer;outline:none}
@@ -63,9 +64,9 @@
 
     /* MAIN */
     .main-wrapper{flex:1;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;min-width:0;margin-left:var(--sidebar-w)}
-    header{display:flex;align-items:center;justify-content:space-between;padding:.45rem 1.5rem;border-bottom:1px solid var(--border);background:var(--bg);gap:1rem;min-height:44px}
+    header{position:sticky;top:0;z-index:40;height:var(--topbar-h);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;border-bottom:1px solid var(--border);background:var(--bg);gap:1rem}
     header .header-left{display:flex;align-items:center;gap:.5rem;min-width:0}
-    header .header-left h1{font-size:1rem;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    header .header-left h1{font-size:1rem;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:none;margin:0;padding:0}
     header nav{display:flex;align-items:center;gap:.25rem;white-space:nowrap;flex-shrink:0}
     header nav a{color:var(--fg-muted);font-size:.82rem;padding:.3rem .55rem;border-radius:var(--radius);line-height:1}
     header nav a:hover{color:var(--fg);text-decoration:none;background:var(--border)}
@@ -86,7 +87,7 @@
       .sidebar.open{transform:translateX(0)}
       .main-wrapper{margin-left:0}
       main{padding:1rem}
-      header{padding:.45rem 1rem}
+      header{padding:0 1rem}
       body{touch-action:manipulation}
     }
 
@@ -230,6 +231,33 @@
       o.classList.add('visible');
     }
 
+    function navigateTo(url, activeEl) {
+      fetch(url)
+        .then(function(r) {
+          if (!r.ok) throw new Error('fetch failed');
+          return r.text();
+        })
+        .then(function(html) {
+          var doc = new DOMParser().parseFromString(html, 'text/html');
+          var newMain = doc.querySelector('main');
+          var newH1 = doc.querySelector('header h1');
+          if (!newMain) throw new Error('no main');
+          document.querySelector('main').innerHTML = newMain.innerHTML;
+          var title = newH1 ? newH1.textContent : doc.title.replace(' - Oblog', '');
+          document.querySelector('header h1').textContent = title;
+          document.title = title + ' - Oblog';
+          var actives = document.querySelectorAll('.tree-item.active');
+          for (var a = 0; a < actives.length; a++) actives[a].classList.remove('active');
+          if (activeEl) activeEl.classList.add('active');
+          currentPath = url.split('/').pop();
+          history.pushState({url: url}, '', url);
+          window.scrollTo(0, 0);
+        })
+        .catch(function() {
+          window.location.href = url;
+        });
+    }
+
     function buildTree(container, nodes, depth, currentPath) {
       if (!nodes || !nodes.length) return;
       for (var i = 0; i < nodes.length; i++) {
@@ -261,13 +289,13 @@
 
         if (node.slug) {
           item.style.cursor = 'pointer';
-          item.onclick = (function(slug) {
+          item.onclick = (function(slug, el) {
             return function(e) {
               if (e.target === toggle || toggle.contains(e.target)) return;
               if (isMobile()) closeSidebar();
-              window.location.href = (isAuth ? '/vault/' : '/blog/') + slug;
+              navigateTo((isAuth ? '/vault/' : '/blog/') + slug, el);
             };
-          })(node.slug);
+          })(node.slug, item);
         } else if (!isDir && node.path) {
           item.onclick = (function(p) {
             return function(e) {
@@ -344,6 +372,36 @@
     }
 
     loadTree();
+
+    window.addEventListener('popstate', function(e) {
+      if (e.state && e.state.url) {
+        navigateToSilent(e.state.url);
+      } else {
+        window.location.reload();
+      }
+    });
+
+    function navigateToSilent(url) {
+      fetch(url)
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
+          var doc = new DOMParser().parseFromString(html, 'text/html');
+          var newMain = doc.querySelector('main');
+          var newH1 = doc.querySelector('header h1');
+          if (newMain) document.querySelector('main').innerHTML = newMain.innerHTML;
+          if (newH1) {
+            document.querySelector('header h1').textContent = newH1.textContent;
+            document.title = newH1.textContent + ' - Oblog';
+          }
+          currentPath = url.split('/').pop();
+          var actives = document.querySelectorAll('.tree-item.active');
+          for (var a = 0; a < actives.length; a++) actives[a].classList.remove('active');
+          window.scrollTo(0, 0);
+        })
+        .catch(function() {
+          window.location.href = url;
+        });
+    }
 
     document.getElementById('menu-btn').addEventListener('click', function() {
       var s = document.getElementById('sidebar');

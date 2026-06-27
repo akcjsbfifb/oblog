@@ -20,6 +20,7 @@ function createRenderer({ isAuthenticated = false } = {}) {
     html: true,
     linkify: true,
     typographer: true,
+    breaks: true,
     highlight: function (str, lang) {
       if (lang && hljs.getLanguage(lang)) {
         try {
