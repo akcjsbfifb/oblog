@@ -19,20 +19,13 @@ services:
       - GIT_BRANCH=${GIT_BRANCH:-main}
       - CACHE_ENABLED=false
     volumes:
-      - ./vault:/app/vault
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - /app/node_modules
+      - ${HOST_VAULT_PATH:-./vault}:/app/vault
       - ./data:/app/data
     develop:
       watch:
-        - action: sync+restart
-          path: ./src
-          target: /app/src
-          ignore:
-            - node_modules/
-        - action: sync
-          path: ./tests
-          target: /app/tests
-          ignore:
-            - node_modules/
         - action: rebuild
           path: ./package.json
         - action: rebuild
