@@ -1,26 +1,42 @@
-version: '3.8'
-
 services:
   oblog:
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.dev
     ports:
       - '3000:3000'
-    volumes:
-      - ./vault:/app/vault
-      - ./data:/app/data
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=3000
       - VAULT_PATH=/app/vault
       - DATA_PATH=/app/data
-      - JWT_SECRET=${JWT_SECRET:-changeme}
+      - JWT_SECRET=${JWT_SECRET:-dev_secret}
       - JWT_EXPIRES_IN=30d
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-}
       - WEBHOOK_SECRET=${WEBHOOK_SECRET:-}
       - GIT_REPO_URL=${GIT_REPO_URL:-}
       - GIT_BRANCH=${GIT_BRANCH:-main}
-      - CACHE_ENABLED=true
+      - CACHE_ENABLED=false
+    volumes:
+      - ./vault:/app/vault
+      - ./data:/app/data
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./tests
+          target: /app/tests
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+        - action: rebuild
+          path: ./pnpm-workspace.yaml
     restart: unless-stopped
